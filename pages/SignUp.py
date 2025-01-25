@@ -23,14 +23,3 @@ if submit_button:
 st.sidebar.title("Navigation")
 page = st.sidebar.radio("Go to", ["Main", "Journal", "Gym", "Meditate", "French Duolingo"])
 
-# Placeholder for other pages
-if page == "Main":
-    st.write("Welcome to the Main page!")
-elif page == "Journal":
-    st.write("Welcome to the Journal page!")
-elif page == "Gym":
-    st.write("Welcome to the Gym page!")
-elif page == "Meditate":
-    st.write("Welcome to the Meditate page!")
-elif page == "French Duolingo":
-    st.write("Welcome to the French Duolingo page!")
