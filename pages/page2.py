@@ -1,5 +1,37 @@
 import streamlit as st
 
-def show():
-    st.title("Page 2")
-    st.write("Welcome to Page 2!")
+# Streamlit UI
+st.title("Login")
+
+# User input for login
+with st.form(key="login_form"):
+    username = st.text_input("Username")
+    password = st.text_input("Password", type="password")
+
+    # Form submission
+    submit_button = st.form_submit_button(label="Login")
+
+if submit_button:
+    # Example credentials validation (in a real app, you would validate against a database)
+    if username == "user" and password == "pass":
+        st.success("Logged in successfully!")
+    else:
+        st.error("Invalid username or password. Please try again.")
+
+# Sidebar navigation
+st.sidebar.title("Navigation")
+page = st.sidebar.radio("Go to", ["Main", "Sign Up", "Journal", "Gym", "Meditate", "French Duolingo"])
+
+# Placeholder for other pages
+if page == "Main":
+    st.write("Welcome to the Main page!")
+elif page == "Sign Up":
+    st.write("Welcome to the Sign Up page!")
+elif page == "Journal":
+    st.write("Welcome to the Journal page!")
+elif page == "Gym":
+    st.write("Welcome to the Gym page!")
+elif page == "Meditate":
+    st.write("Welcome to the Meditate page!")
+elif page == "French Duolingo":
+    st.write("Welcome to the French Duolingo page!")
