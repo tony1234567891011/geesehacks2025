@@ -49,7 +49,7 @@ def get_friends(user_id):
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute("""
-        SELECT u.email AS friend_email, u.username
+        SELECT u.id AS friend_id, u.email AS friend_email, u.username
         FROM friends f
         JOIN users u ON f.friend_id = u.id
         WHERE f.user_id = %s;
@@ -57,7 +57,7 @@ def get_friends(user_id):
     friends = cur.fetchall()
     cur.close()
     conn.close()
-    return [{"friend_email": row[0], "username": row[1]} for row in friends]
+    return [{"friend_id": row[0], "friend_email": row[1], "username": row[2]} for row in friends]
 
 # Fetch friends for the current user
 friends = get_friends(CURRENT_USER_ID)
@@ -66,5 +66,6 @@ if friends:
     st.write("Your friends:")
     for friend in friends:
         st.write(f"👤 {friend['username']} (Email: {friend['friend_email']})")
+        st.write(f"[View {friend['username']}'s Tower](http://localhost:8501/viewfriend?friend_id={friend['friend_id']})")
 else:
     st.write("You have no friends yet.")

@@ -1,6 +1,13 @@
 import streamlit as st
 import json
 from datetime import datetime
+from database import add_block  # Import add_block function
+
+# Initialize session state variables
+if 'block_colors' not in st.session_state:
+    st.session_state.block_colors = []
+if 'tower_height' not in st.session_state:
+    st.session_state.tower_height = 0
 
 # Mock database
 def load_tasks():
@@ -26,6 +33,21 @@ def add_task(task, category):
 def complete_task(task_index):
     tasks[task_index]['completed'] = True
     save_tasks(tasks)
+    # Add a block with the corresponding color
+    category = tasks[task_index]['category']
+    color = ''
+    if category == 'Athletic':
+        color = 'P'
+        st.session_state.block_colors.append('red')
+    elif category == 'Social':
+        color = 'Y'
+        st.session_state.block_colors.append('yellow')
+    elif category == 'Mental':
+        color = 'B'
+        st.session_state.block_colors.append('blue')
+    st.session_state.tower_height += 1
+    # Add block to the tower in the database
+    add_block(1, color)  # Assuming USER_ID is 1 for simplicity
 
 # Map category to color
 category_colors = {
