@@ -53,8 +53,9 @@ st.markdown(
     """,
     unsafe_allow_html=True
 )
-
 # Display name and streak
 st.subheader(f"Name: {user_name}")
 st.subheader(f"Streak: {streak} days")
+
+
 
