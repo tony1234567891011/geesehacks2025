@@ -59,3 +59,30 @@ def check_user(username, password):
     else:
         raise ValueError("Incorrect Password")
     return None
+
+
+def get_user_by_id(user_id):
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        query = "SELECT id, username FROM users WHERE id = %s"
+        cur.execute(query, (user_id,))
+        user = cur.fetchone()
+        
+        # Check if the user exists
+        if user is None:
+            raise ValueError(f"User with id {user_id} does not exist.")
+        
+        # Format the result as a dictionary
+        user_data = {
+            "id": user[0],
+            "username": user[1]
+        }
+        
+        return user_data
+    except Exception as e:
+        raise e
+    finally:
+        cur.close()
+        conn.close()
+        

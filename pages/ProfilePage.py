@@ -1,6 +1,14 @@
 import streamlit as st
 from datetime import datetime, timedelta
 
+from database import get_user_by_id
+
+
+query_params = st.experimental_get_query_params()
+user_id = query_params.get("user_id", [None])[0]
+
+
+
 # Function to calculate streak (days without break)
 def calculate_streak(completed_dates):
     if not completed_dates:
@@ -21,16 +29,32 @@ def calculate_streak(completed_dates):
             break
     return streak
 
+
+if user_id:
+    user = get_user_by_id(user_id)
+
+
+
+    user_name = user["username"]
+    profile_picture = "https://picsum.photos/100"  # Replace with your image path or URL
+    completed_dates = [
+        datetime(2025, 1, 20),
+        datetime(2025, 1, 21),
+        datetime(2025, 1, 22),
+        datetime(2025, 1, 23),
+        datetime(2025, 1, 24),  # Sample data; replace with actual completed task dates
+    ]
+else:
 # Example user data
-user_name = "John Doe"
-profile_picture = "https://picsum.photos/100"  # Replace with your image path or URL
-completed_dates = [
-    datetime(2025, 1, 20),
-    datetime(2025, 1, 21),
-    datetime(2025, 1, 22),
-    datetime(2025, 1, 23),
-    datetime(2025, 1, 24),  # Sample data; replace with actual completed task dates
-]
+    user_name = "Not Logedid"
+    profile_picture = "https://picsum.photos/100"  # Replace with your image path or URL
+    completed_dates = [
+        datetime(2025, 1, 20),
+        datetime(2025, 1, 21),
+        datetime(2025, 1, 22),
+        datetime(2025, 1, 23),
+        datetime(2025, 1, 24),  # Sample data; replace with actual completed task dates
+    ]
 
 # Calculate streak
 streak = calculate_streak(completed_dates)
@@ -56,6 +80,3 @@ st.markdown(
 # Display name and streak
 st.subheader(f"Name: {user_name}")
 st.subheader(f"Streak: {streak} days")
-
-
-

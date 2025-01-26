@@ -49,6 +49,3 @@ else:
     st.write("Welcome,", user_info["name"])
     st.write("Email:", user_info["email"])
 
-# Sidebar navigation
-st.sidebar.title("Navigation")
-page = st.sidebar.radio("Go to", ["Main", "Sign Up", "Journal", "Gym", "Meditate", "French Duolingo"])
