@@ -1,59 +1,74 @@
 import streamlit as st
+import datetime
 
-# Initialize session state for tower height
-if "tower_height" not in st.session_state:
-    st.session_state.tower_height = 5  # Default initial height
+# Initialize session state for habits
+if "habits" not in st.session_state:
+    st.session_state.habits = {
+        "Journal": 0,
+        "Gym": 0,
+        "Meditate": 0,
+        "French Duolingo": 0
+    }
+    st.session_state.streaks = {habit: 0 for habit in st.session_state.habits}
+    st.session_state.last_completed = {habit: None for habit in st.session_state.habits}
 
 # Streamlit UI
-st.title("Progress Tracker")
-st.write("Make your tower as big as possible!")
+st.title("🏗️ Habit Tracker: Build Your Tower!")
+st.write("Each completed task adds a block to your tower!")
 
-# Display the current tower height
-st.write(f"Current Tower Height: {st.session_state.tower_height}")
+# Sidebar Navigation
+st.sidebar.title("📌 Your Habits")
+page = st.sidebar.radio("Select Habit", list(st.session_state.habits.keys()) + ["Add New Habit"])
 
-# Add Block Button
-if st.button("Add Block"):
-    if st.session_state.tower_height < 200:  # Limit the number of blocks to 200
-        st.session_state.tower_height += 1
-    else:
-        st.warning("Maximum tower height reached!")
+# Add New Habit
+if page == "Add New Habit":
+    new_habit = st.sidebar.text_input("Enter new habit name:")
+    if st.sidebar.button("Add Habit") and new_habit:
+        if new_habit not in st.session_state.habits:
+            st.session_state.habits[new_habit] = 0
+            st.session_state.streaks[new_habit] = 0
+            st.session_state.last_completed[new_habit] = None
+            st.success(f"{new_habit} added to habits!")
+        else:
+            st.warning("This habit already exists!")
 
-# Reset Button
-if st.button("Reset Tower"):
-    st.session_state.tower_height = 1  # Reset to one block
+# Main Habit Page
+if page in st.session_state.habits:
+    st.header(f"📌 {page} Habit Progress")
+    st.write(f"Blocks Earned: {st.session_state.habits[page]}")
+    st.write(f"🔥 Streak: {st.session_state.streaks[page]} days")
+    
+    # Complete Task Button
+    if st.button("✅ Mark as Completed Today"):
+        today = datetime.date.today()
+        last_date = st.session_state.last_completed[page]
+        
+        if last_date is not None and (today - last_date).days == 1:
+            st.session_state.streaks[page] += 1  # Maintain streak
+        else:
+            st.session_state.streaks[page] = 1  # Reset streak if broken
+        
+        st.session_state.habits[page] += 1  # Increase block count
+        st.session_state.last_completed[page] = today
+        st.success(f"{page} completed today! Tower growing!")
+    
+    # Reset Habit Progress
+    if st.button("🔄 Reset Habit"):
+        st.session_state.habits[page] = 0
+        st.session_state.streaks[page] = 0
+        st.session_state.last_completed[page] = None
+        st.warning(f"{page} progress reset.")
 
-# Add CSS for a black to night blue gradient background
-st.markdown(
-    """
-    <style>
-    html, body, [data-testid="stAppViewContainer"] {
-        background: linear-gradient(to bottom, #000000, #001f3f); /* Black to Night Blue */
-        height: auto; /* Allow height to grow dynamically */
-        margin: 0;
-        overflow-x: hidden;
-    }
-
-    .scrollable-container {
-        overflow-y: visible; /* Let the container grow naturally */
-        border: 1px solid rgba(255, 255, 255, 0.2); /* Optional border */
-        padding: 10px;
-        background-color: rgba(0, 0, 0, 0); /* Fully transparent background */
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
-
-# Three.js HTML and JavaScript code
+# Three.js Integration for Tower Visualization
 three_js_code = f"""
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Block Tower</title>
+    <title>3D Habit Tower</title>
     <style>
-        body {{ margin: 0; background: linear-gradient(to bottom, #000000, #001f3f); }} /* Set background gradient */
-        canvas {{ display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to bottom, #000000, #001f3f); }} /* Fix position and size */
+        body {{ margin: 0; background: linear-gradient(to bottom, #000000, #001f3f); }}
+        canvas {{ display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%; }}
     </style>
 </head>
 <body>
@@ -61,33 +76,33 @@ three_js_code = f"""
     <script>
         let scene = new THREE.Scene();
         let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        let renderer = new THREE.WebGLRenderer({{ alpha: true }}); // Enable transparency
-        renderer.setClearColor(0x000000, 0); // Set the clear color to transparent
+        let renderer = new THREE.WebGLRenderer();
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
+        let light = new THREE.PointLight(0xffffff, 1, 100);
+        light.position.set(2, 5, 5);
+        scene.add(light);
+
         let blockWidth = 1;
         let blockHeight = 0.5;
-        let blocks = [];
-        let towerHeight = {st.session_state.tower_height}; // Dynamically injected Python variable
+        let towerHeight = {sum(st.session_state.habits.values())};
 
-        // Create blocks
         for (let i = 0; i < towerHeight; i++) {{
             let geometry = new THREE.BoxGeometry(blockWidth, blockHeight, blockWidth);
-            let hue = (i / towerHeight) * 360; // Define hue within the loop
-            let color = new THREE.Color(`hsl(${{hue}}, 100%, 50%)`); // Escape the ${{}} for JavaScript
-            let material = new THREE.MeshBasicMaterial({{ color: color }});
+            let color = new THREE.Color(`hsl(${{(i / towerHeight) * 360}}, 100%, 50%)`);
+            let material = new THREE.MeshPhongMaterial({{ color: color, shininess: 50 }});
             let block = new THREE.Mesh(geometry, material);
             block.position.y = i * blockHeight;
             scene.add(block);
-            blocks.push(block);
         }}
 
-        camera.position.set(3, towerHeight * blockHeight, 5); // Adjust camera position for an angled, upper view
-        camera.lookAt(0, towerHeight * blockHeight / 2, 0); // Make the camera look at the center of the tower
+        camera.position.set(2, towerHeight * blockHeight, 5);
+        camera.lookAt(0, towerHeight * blockHeight / 2, 0);
 
         function animate() {{
             requestAnimationFrame(animate);
+            scene.rotation.y += 0.005;
             renderer.render(scene, camera);
         }}
         animate();
@@ -96,19 +111,4 @@ three_js_code = f"""
 </html>
 """
 
-# Embed the Three.js code in Streamlit
 st.components.v1.html(three_js_code, height=600, scrolling=False)
-
-# Sidebar navigation
-st.sidebar.title("Navigation")
-page = st.sidebar.radio("Go to", ["Main", "Journal", "Gym", "Meditate", "French Duolingo"])
-
-# Placeholder for other pages
-if page == "Journal":
-    st.write("Welcome to the Journal page!")
-elif page == "Gym":
-    st.write("Welcome to the Gym page!")
-elif page == "Meditate":
-    st.write("Welcome to the Meditate page!")
-elif page == "French Duolingo":
-    st.write("Welcome to the French Duolingo page!")
