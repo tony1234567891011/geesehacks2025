@@ -33,7 +33,7 @@ if st.button("Add Task"):
         st.session_state.tasks.append({"name": new_task, "completed": False})
         st.success(f"Task '{new_task}' added!")
         # Rerun so UI updates immediately
-        st.experimental_rerun()
+        safe_rerun()
     else:
         st.warning("Please enter a valid task name.")
 
@@ -57,7 +57,7 @@ for idx, task in enumerate(st.session_state.tasks):
                 task["completed"] = True
                 st.success(f"'{task['name']}' marked as completed!")
                 # Force rerun so we see the updated cross-out immediately
-                st.experimental_rerun()
+                safe_rerun()
         else:
             st.write("✅ Done")
 
@@ -76,7 +76,7 @@ if st.button("Reset All Tasks"):
     for t in st.session_state.tasks:
         t["completed"] = False
     st.warning("All tasks have been reset to incomplete.")
-    st.experimental_rerun()
+    safe_rerun()
 
 st.write("---")
 
