@@ -27,49 +27,66 @@ tower_colors = generate_tower_colors(tower_string)
 if "camera_position" not in st.session_state:
     st.session_state.camera_position = {"x": 3, "y": len(tower_colors) * 0.5, "z": 5}
 
-# Initialize flag for adding a new block
-if "new_block_added" not in st.session_state:
-    st.session_state.new_block_added = False
+# Streamlit UI
+st.title("Progress Tracker")
+st.write("Make your tower as big as possible!")
 
-# Add CSS for a black to night blue gradient background and overlay card
+# Display the current tower colors
+st.write("Tower colors:", tower_colors)
+
+# Color picker for a new block
+new_block_color = st.selectbox("Choose a color for the new block:", ["P", "B", "Y"])
+
+# Add Block Button
+if st.button("Add Block"):
+    if len(tower_colors) < 200:  # Limit the number of blocks to 200
+        try:
+            add_block(USER_ID, new_block_color)
+            st.success(f"Added block {new_block_color} to the tower!")
+            tower_string += new_block_color  # Update the local string for immediate feedback
+            tower_colors = generate_tower_colors(tower_string)
+        except Exception as e:
+            st.error(f"Failed to add block: {e}")
+    else:
+        st.warning("Maximum tower height reached!")
+
+# Reset Button
+if st.button("Reset Tower"):
+    try:
+        set_tower(USER_ID, "")  # Reset the tower in the database
+        tower_string = ""  # Clear the local tower string
+        tower_colors = []  # Reset tower colors
+        st.success("Tower has been reset!")
+    except Exception as e:
+        st.error(f"Failed to reset tower: {e}")
+
+# Display the current tower height
+st.write(f"Current Tower Height: {len(tower_colors)}")
+st.write(f"Current Block Colors: {tower_colors}")
+
+if st.button("Remove 3 Blocks"):
+    try:
+        updated_tower = remove_blocks(USER_ID, 3)
+        st.success("Removed 3 blocks from the tower!")
+        tower_string = updated_tower  # Update local variable for immediate feedback
+        tower_colors = generate_tower_colors(tower_string)  # Re-generate colors
+    except ValueError as e:
+        st.error(f"Error: {e}")
+
+# Add CSS for a black to night blue gradient background
 st.markdown(
     """
     <style>
     html, body, [data-testid="stAppViewContainer"] {
         background: linear-gradient(to bottom, #000000, #001f3f); /* Black to Night Blue */
         height: 100vh; /* Set height to 100% of the viewport height */
-        width: 100vw;
         margin: 0;
         overflow: hidden;
-    }
-    .overlay-card {
-        position: absolute;
-        top: 20px;
-        right: -15vw;
-        width: 25vw;
-        height: 80vh;
-        background-color: rgba(38,39,48,255);
-        padding: 20px;
-        border-radius: 10px;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-        z-index: 1000;
-    }
-    canvas {
-        position: fixed;
-        top: 0;
-        left: -40vw; /* Move the canvas 10vw to the left */
-        width: 120vw; /* Increase the width to cover the viewport */
-        height: 100vh;
     }
     </style>
     """,
     unsafe_allow_html=True,
 )
-
-# Create the overlay card with Streamlit buttons
-with st.container():
-    st.markdown('<div class="overlay-card">', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
 
 # Three.js HTML and JavaScript code for rendering the tower
 three_js_code = f"""
@@ -80,7 +97,7 @@ three_js_code = f"""
     <title>Block Tower</title>
     <style>
         body {{ margin: 0; background: linear-gradient(to bottom, #000000, #001f3f); }}
-        canvas {{ display: block; position: fixed; top: 0; left: -10vw; width: 120vw; height: 100vh; }}
+        canvas {{ display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%; }}
     </style>
 </head>
 <body>
@@ -90,80 +107,35 @@ three_js_code = f"""
         let scene, camera, renderer, blocks = [];
         let blockWidth = 1;
         let blockHeight = 0.5;
+        let blocks = [];
         let towerHeight = {len(tower_colors)}; // Dynamically injected Python variable
         let blockColors = {tower_colors}; // Dynamically injected Python variable
 
-        function init() {{
-            scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-            renderer = new THREE.WebGLRenderer({{ alpha: true }});
-            renderer.setClearColor(0x000000, 0);
-            renderer.setSize(window.innerWidth, window.innerHeight);
-            document.body.appendChild(renderer.domElement);
-
-            let ambientLight = new THREE.AmbientLight(0x404040);
-            scene.add(ambientLight);
-
-            let directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-            directionalLight.position.set(5, 10, 7.5).normalize();
-            scene.add(directionalLight);
-
-            camera.position.set({st.session_state.camera_position["x"]}, {st.session_state.camera_position["y"]}, {st.session_state.camera_position["z"]});
-            camera.lookAt(0, towerHeight * blockHeight / 2, 0);
-
-            for (let i = 0; i < towerHeight; i++) {{
-                let geometry = new THREE.BoxGeometry(blockWidth, blockHeight, blockWidth);
-                let color = new THREE.Color(blockColors[i]);
-                let material = new THREE.MeshLambertMaterial({{ color: color }});
-                let block = new THREE.Mesh(geometry, material);
-                block.position.y = i * blockHeight;
-                scene.add(block);
-                blocks.push(block);
-            }}
-
-            animate();
+        for (let i = 0; i < towerHeight; i++) {{
+            let geometry = new THREE.BoxGeometry(blockWidth, blockHeight, blockWidth);
+            let color = new THREE.Color(blockColors[i]);
+            let material = new THREE.MeshLambertMaterial({{ color: color }});
+            let block = new THREE.Mesh(geometry, material);
+            block.position.y = i * blockHeight;
+            scene.add(block);
+            blocks.push(block);
         }}
+
+        let ambientLight = new THREE.AmbientLight(0x404040);
+        scene.add(ambientLight);
+
+        let directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+        directionalLight.position.set(5, 10, 7.5).normalize();
+        scene.add(directionalLight);
+
+        camera.position.set({st.session_state.camera_position["x"]}, {st.session_state.camera_position["y"]}, {st.session_state.camera_position["z"]});
+        camera.lookAt(0, towerHeight * blockHeight / 2, 0);
 
         function animate() {{
             requestAnimationFrame(animate);
             renderer.render(scene, camera);
         }}
-
-        function addBlockAnimation(color) {{
-            let geometry = new THREE.BoxGeometry(blockWidth, blockHeight, blockWidth);
-            let material = new THREE.MeshLambertMaterial({{ color: new THREE.Color(color) }});
-            let block = new THREE.Mesh(geometry, material);
-            block.position.y = towerHeight * blockHeight;
-            block.scale.set(1, 0, 1);
-            scene.add(block);
-            blocks.push(block);
-
-            let targetScaleY = 1;
-            let currentScaleY = 0;
-            let animationSpeed = 0.05;
-
-            function growBlock() {{
-                if (currentScaleY < targetScaleY) {{
-                    currentScaleY += animationSpeed;
-                    block.scale.y = currentScaleY;
-                    block.position.y = (towerHeight + currentScaleY / 2) * blockHeight;
-                    requestAnimationFrame(growBlock);
-                }} else {{
-                    block.scale.y = targetScaleY;
-                    block.position.y = towerHeight * blockHeight;
-                }}
-            }}
-            growBlock();
-        }}
-
-        if (!window.initialized) {{
-            init();
-            window.initialized = true;
-        }}
-
-        if ({st.session_state.new_block_added}) {{
-            addBlockAnimation(blockColors[blockColors.length - 1]);
-        }}
+        animate();
     </script>
 </body>
 </html>
@@ -171,6 +143,3 @@ three_js_code = f"""
 
 # Embed the Three.js code in Streamlit
 st.components.v1.html(three_js_code, height=800, scrolling=False)
-
-# Reset the flag after rendering
-st.session_state.new_block_added = False
