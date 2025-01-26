@@ -1,87 +1,70 @@
 import streamlit as st
-import pandas as pd
-import json
+from database import add_friend, get_db_connection  # Import necessary functions
 
-# Mock database functions
-def load_users():
-    try:
-        with open('users.json', 'r') as f:
-            return json.load(f)
-    except FileNotFoundError:
-        return []
-
-def save_users(users):
-    with open('users.json', 'w') as f:
-        json.dump(users, f)
-
-def load_friend_requests():
-    try:
-        with open('friend_requests.json', 'r') as f:
-            return json.load(f)
-    except FileNotFoundError:
-        return []
-
-def save_friend_requests(requests):
-    with open('friend_requests.json', 'w') as f:
-        json.dump(requests, f)
-
-# Load data
-users = load_users()
-friend_requests = load_friend_requests()
-
-# Sample user data
-current_user = 'john_doe'  # Replace with the actual current user
-users = [
-    {'username': 'john_doe', 'name': 'John Doe'},
-    {'username': 'jane_smith', 'name': 'Jane Smith'},
-    {'username': 'alice_brown', 'name': 'Alice Brown'},
-    {'username': 'bob_jones', 'name': 'Bob Jones'},
-]
-
-# Function to send a friend request
-def send_friend_request(from_user, to_user):
-    friend_requests.append({'from': from_user, 'to': to_user, 'status': 'pending'})
-    save_friend_requests(friend_requests)
-
-# Function to accept a friend request
-def accept_friend_request(request):
-    request['status'] = 'accepted'
-    save_friend_requests(friend_requests)
-
-# Function to deny a friend request
-def deny_friend_request(request):
-    request['status'] = 'denied'
-    save_friend_requests(friend_requests)
+# Mocked current user (replace with session-based authentication in production)
+CURRENT_USER_ID = 1
 
 # Streamlit UI
 st.title("Friends Page")
 
-# Lookup people and send friend requests
-st.subheader("Look Up People")
-search_username = st.text_input("Search by username")
-if st.button("Search"):
-    searched_users = [user for user in users if search_username.lower() in user['username'].lower()]
-    if searched_users:
-        for user in searched_users:
-            st.write(f"Username: {user['username']}, Name: {user['name']}")
-            if st.button(f"Send Friend Request to {user['username']}"):
-                send_friend_request(current_user, user['username'])
-                st.success(f"Friend request sent to {user['username']}!")
+# Add Friend Section
+st.subheader("Add a Friend")
+friend_email = st.text_input("Enter the Friend's Email:")
+
+if st.button("Add Friend"):
+    if not friend_email:
+        st.error("Please enter a valid email.")
     else:
-        st.error("No users found with that username.")
+        try:
+            # Fetch the friend's user_id by email
+            conn = get_db_connection()
+            cur = conn.cursor()
+            cur.execute("SELECT id FROM users WHERE email = %s;", (friend_email,))
+            result = cur.fetchone()
+            
+            if not result:
+                st.error("No user found with this email.")
+            else:
+                friend_id = result[0]
+                
+                # Ensure the user is not adding themselves
+                if friend_id == CURRENT_USER_ID:
+                    st.error("You cannot add yourself as a friend.")
+                else:
+                    # Add friend
+                    add_friend(CURRENT_USER_ID, friend_id)
+                    st.success(f"Successfully added {friend_email} as a friend!")
 
-# View and manage friend requests
-st.subheader("Pending Friend Requests")
-pending_requests = [request for request in friend_requests if request['to'] == current_user and request['status'] == 'pending']
-if pending_requests:
-    for request in pending_requests:
-        st.write(f"Friend request from {request['from']}")
-        if st.button(f"Accept {request['from']}"):
-            accept_friend_request(request)
-            st.success(f"Accepted friend request from {request['from']}")
-        if st.button(f"Deny {request['from']}"):
-            deny_friend_request(request)
-            st.success(f"Denied friend request from {request['from']}")
+            cur.close()
+            conn.close()
+        except Exception as e:
+            st.error(f"An error occurred: {str(e)}")
+
+# Friends List Section
+st.subheader("Your Friends List")
+
+# Function to fetch friends by email
+def get_friends(user_id):
+    """Fetch the list of friends for a given user."""
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT u.email AS friend_email, u.username
+        FROM friends f
+        JOIN users u ON f.friend_id = u.id
+        WHERE f.user_id = %s;
+    """, (user_id,))
+    friends = cur.fetchall()
+    cur.close()
+    conn.close()
+    return [{"friend_email": row[0], "username": row[1]} for row in friends]
+
+# Fetch friends for the current user
+friends = get_friends(CURRENT_USER_ID)
+
+if friends:
+    st.write("Your friends:")
+    for friend in friends:
+        st.write(f"👤 {friend['username']} (Email: {friend['friend_email']})")
 else:
-    st.write("No pending friend requests.")
-
+    st.write("You have no friends yet.")
