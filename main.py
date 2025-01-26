@@ -32,7 +32,6 @@ def create_block_tower(height):
             y1=y1,
             line=dict(color="black"),
 
-            fillcolor=colour,
             fillcolor=gradient_colors[i],  # Use the gradient color
         )
 
