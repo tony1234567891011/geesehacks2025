@@ -1,5 +1,13 @@
 import streamlit as st
 
+def safe_rerun():
+    """Call safe_rerun() if available."""
+    if hasattr(st, "experimental_rerun"):
+        safe_rerun()
+    else:
+        st.warning("Your Streamlit version does not support experimental_rerun. Please upgrade.")
+
+
 st.set_page_config(
     page_title="Space Themed To-Do List",
     layout="centered",
