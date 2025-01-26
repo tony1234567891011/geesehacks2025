@@ -83,13 +83,22 @@ three_js_code = f"""
         for (let i = 0; i < towerHeight; i++) {{
             let geometry = new THREE.BoxGeometry(blockWidth, blockHeight, blockWidth);
             let hue = (i / towerHeight) * 360; // Define hue within the loop
-            let color = new THREE.Color(`hsl(${{hue}}, 100%, 50%)`); // Escape the ${{}} for JavaScript
-            let material = new THREE.MeshBasicMaterial({{ color: color }});
+            let color = new THREE.Color(`hsl(${{hue}}, 80%, 85%)`); // Adjust saturation and lightness for pastel colors
+            let material = new THREE.MeshLambertMaterial({{ color: color }}); // Use Lambert material for better lighting
             let block = new THREE.Mesh(geometry, material);
             block.position.y = i * blockHeight;
             scene.add(block);
             blocks.push(block);
         }}
+
+        // Add ambient light
+        let ambientLight = new THREE.AmbientLight(0x404040); // Soft white light
+        scene.add(ambientLight);
+
+        // Add directional light
+        let directionalLight = new THREE.DirectionalLight(0xffffff, 1); // White light
+        directionalLight.position.set(5, 10, 7.5).normalize();
+        scene.add(directionalLight);
 
         // Restore camera position from session state
         camera.position.set({st.session_state.camera_position["x"]}, {st.session_state.camera_position["y"]}, {st.session_state.camera_position["z"]});
@@ -98,6 +107,17 @@ three_js_code = f"""
         // Add event listener for mouse wheel to scroll in the z-axis
         window.addEventListener('wheel', (event) => {{
             camera.position.y += event.deltaY * 0.01; // Adjust the scroll speed as needed
+            // Save camera position to session state
+            fetch(`/?x=${{camera.position.x}}&y=${{camera.position.y}}&z=${{camera.position.z}}`);
+        }});
+
+        // Add event listener for keydown to move the camera with arrow keys
+        window.addEventListener('keydown', (event) => {{
+            if (event.key === 'ArrowUp') {{
+                camera.position.y += 0.1; // Move camera up
+            }} else if (event.key === 'ArrowDown') {{
+                camera.position.y -= 0.1; // Move camera down
+            }}
             // Save camera position to session state
             fetch(`/?x=${{camera.position.x}}&y=${{camera.position.y}}&z=${{camera.position.z}}`);
         }});
