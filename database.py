@@ -1,7 +1,7 @@
 import streamlit as st
 import psycopg2
 # PostgreSQL Database Connection
-DATABASE_URL = "postgresql://postgres.lxkfxndaabhtrpvazszt:BlockedIn4Ever!@aws-0-ca-central-1.pooler.supabase.com:6543/postgres"
+DATABASE_URL = "postgresql://postgres:BlockedIn4Ever%21@db.lxkfxndaabhtrpvazszt.supabase.co:5432/postgres"
 
 def get_db_connection():
     """Establish a connection to the PostgreSQL database."""
