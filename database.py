@@ -85,4 +85,98 @@ def get_user_by_id(user_id):
     finally:
         cur.close()
         conn.close()
+    
+def add_block(user_id, block_color):
+    """Add a block to the user's tower."""
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        # Retrieve the current tower colors
+        cur.execute("SELECT colors FROM towers WHERE user_id = %s;", (user_id,))
+        result = cur.fetchone()
         
+        if not result:
+            raise ValueError(f"Tower for user_id {user_id} does not exist.")
+        
+        current_colours = result[0] or ""  # Default to an empty string if colours is NULL
+
+        # Append the new block color
+        new_colours = current_colours + block_color
+        cur.execute("UPDATE towers SET colors = %s WHERE user_id = %s;", (new_colours, user_id))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        cur.close()
+        conn.close()
+
+def get_tower(user_id):
+    """Retrieve the tower's colors for a user."""
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        cur.execute("SELECT colors FROM towers WHERE user_id = %s;", (user_id,))
+        result = cur.fetchone()
+        if not result:
+            raise ValueError(f"Tower for user_id {user_id} does not exist.")
+        return result[0] or ""  # Return an empty string if colours is NULL
+    finally:
+        cur.close()
+        conn.close()
+
+def set_tower(user_id, new_colours):
+    """Set a new tower for the user."""
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        # Check if the tower exists
+        cur.execute("SELECT id FROM towers WHERE user_id = %s;", (user_id,))
+        result = cur.fetchone()
+
+        if result:
+            # Update existing tower
+            cur.execute("UPDATE towers SET colors = %s WHERE user_id = %s;", (new_colours, user_id))
+        else:
+            # Create a new tower if one doesn't exist
+            cur.execute("INSERT INTO towers (user_id, colors) VALUES (%s, %s);", (user_id, new_colours))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        cur.close()
+        conn.close()
+
+def remove_blocks(user_id, number_of_blocks):
+    """Remove a specified number of blocks from the end of the user's tower."""
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        # Retrieve the current tower colors
+        cur.execute("SELECT colors FROM towers WHERE user_id = %s;", (user_id,))
+        result = cur.fetchone()
+        
+        if not result:
+            raise ValueError(f"Tower for user_id {user_id} does not exist.")
+        
+        current_colours = result[0] or ""  # Default to an empty string if colours is NULL
+
+        # Ensure the number of blocks to remove is not greater than the tower length
+        if number_of_blocks > len(current_colours):
+            raise ValueError(f"Cannot remove {number_of_blocks} blocks. Tower only has {len(current_colours)} blocks.")
+        
+        # Remove the specified number of blocks from the tail
+        new_colours = current_colours[:-number_of_blocks]
+
+        # Update the tower in the database
+        cur.execute("UPDATE towers SET colors = %s WHERE user_id = %s;", (new_colours, user_id))
+        conn.commit()
+
+        return new_colours  # Return the updated tower string for confirmation
+    except Exception as e:
+        conn.rollback()
+        raise e
+    finally:
+        cur.close()
+        conn.close()
