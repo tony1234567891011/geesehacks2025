@@ -8,6 +8,9 @@ if "tower_height" not in st.session_state:
 st.title("Progress Tracker")
 st.write("Make your tower as big as possible!")
 
+# Display the current tower height
+st.write(f"Current Tower Height: {st.session_state.tower_height}")
+
 # Add Block Button
 if st.button("Add Block"):
     if st.session_state.tower_height < 200:  # Limit the number of blocks to 200
