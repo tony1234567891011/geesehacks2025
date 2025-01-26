@@ -73,6 +73,10 @@ st.markdown(
         width: 120vw; /* Increase the width to cover the viewport */
         height: 100vh;
     }
+    button:hover {
+        border: 2px solid green;
+        color: green;
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -80,7 +84,7 @@ st.markdown(
 
 # Create the overlay card with Streamlit buttons
 # st.markdown('<div class="overlay-card">', unsafe_allow_html=True)
-st.markdown(f"<h3>Time left until next day: {str(time_left).split('.')[0]}</h3>", unsafe_allow_html=True)
+st.markdown(f"<h3>Blocks Expire in : {str(time_left).split('.')[0]}</h3>", unsafe_allow_html=True)
 
 # Task buttons
 task1_container = st.empty()
@@ -88,30 +92,39 @@ task2_container = st.empty()
 task3_container = st.empty()
 
 if st.session_state.task_completion_times["task1"] is None or datetime.now() - st.session_state.task_completion_times["task1"] > timedelta(days=1):
-    if task1_container.button("Complete Task 1"):
+    if task1_container.button("Go for a walk"):
         add_block(USER_ID, "P")
+        tower_string += "P"  # Update the local tower string
+        set_tower(USER_ID, tower_string)  # Update the tower in the database
+        tower_colors = generate_tower_colors(tower_string)  # Update the tower colors
         st.session_state.task_completion_times["task1"] = datetime.now()
-        st.success("Task 1 completed! Added a Red block to the tower.")
+        st.success("Body Block Earned!")
         st.session_state.new_block_added = True
         task1_container.empty()  # Hide the button after it's clicked
 else:
     task1_container.empty()  # Hide the button if the task is already completed
 
 if st.session_state.task_completion_times["task2"] is None or datetime.now() - st.session_state.task_completion_times["task2"] > timedelta(days=1):
-    if task2_container.button("Complete Task 2"):
+    if task2_container.button("Meditate for 10 minutes"):
         add_block(USER_ID, "B")
+        tower_string += "B"  # Update the local tower string
+        set_tower(USER_ID, tower_string)  # Update the tower in the database
+        tower_colors = generate_tower_colors(tower_string)  # Update the tower colors
         st.session_state.task_completion_times["task2"] = datetime.now()
-        st.success("Task 2 completed! Added a Blue block to the tower.")
+        st.success("Mind Block Earned!")
         st.session_state.new_block_added = True
         task2_container.empty()  # Hide the button after it's clicked
 else:
     task2_container.empty()  # Hide the button if the task is already completed
 
 if st.session_state.task_completion_times["task3"] is None or datetime.now() - st.session_state.task_completion_times["task3"] > timedelta(days=1):
-    if task3_container.button("Complete Task 3"):
+    if task3_container.button("Call mom"):
         add_block(USER_ID, "Y")
+        tower_string += "Y"  # Update the local tower string
+        set_tower(USER_ID, tower_string)  # Update the tower in the database
+        tower_colors = generate_tower_colors(tower_string)  # Update the tower colors
         st.session_state.task_completion_times["task3"] = datetime.now()
-        st.success("Task 3 completed! Added a Yellow block to the tower.")
+        st.success("Soul Block Earned!")
         st.session_state.new_block_added = True
         task3_container.empty()  # Hide the button after it's clicked
 else:
