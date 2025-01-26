@@ -24,6 +24,3 @@ if submit_button:
     else:
         st.error("fail")
 
-# Sidebar navigation
-st.sidebar.title("Navigation")
-page = st.sidebar.radio("Go to", ["Main", "Sign Up", "Journal", "Gym", "Meditate", "French Duolingo"])

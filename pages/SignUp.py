@@ -32,18 +32,3 @@ if submit_button:
     else:
         st.error("Passwords do not match. Please try again.")
 
-# Sidebar navigation
-st.sidebar.title("Navigation")
-page = st.sidebar.radio("Go to", ["Main", "Journal", "Gym", "Meditate", "French Duolingo"])
-
-# Add navigation behavior (optional)
-if page == "Main":
-    st.write("Welcome to the main page!")
-elif page == "Journal":
-    st.write("This is your Journal page.")
-elif page == "Gym":
-    st.write("Track your gym activities here.")
-elif page == "Meditate":
-    st.write("Start your meditation journey.")
-elif page == "French Duolingo":
-    st.write("Practice French with Duolingo.")
