@@ -1,7 +1,5 @@
 import streamlit as st
-import datetime
 
-# Set up the page
 st.set_page_config(
     page_title="Space Themed To-Do List",
     layout="centered",
@@ -15,17 +13,19 @@ st.write("Create tasks below. Mark them complete to add blocks to your 3D tower 
 # SESSION STATE: STORE AND MANAGE TO-DO TASKS
 ##############################################
 if "tasks" not in st.session_state:
-    st.session_state.tasks = []  # List of dicts: [ {"name": str, "completed": bool }, ...]
+    st.session_state.tasks = []  # Each task is a dict: {"name": str, "completed": bool}
 
-# 1) INPUT TO ADD A NEW TASK
+#####################################
+# 1) ADD A NEW TASK (ONE CLICK)
+#####################################
 new_task = st.text_input("Add a new task:")
-
 if st.button("Add Task"):
     new_task = new_task.strip()
     if new_task:
-        # Append a new task dict
         st.session_state.tasks.append({"name": new_task, "completed": False})
         st.success(f"Task '{new_task}' added!")
+        # Rerun so UI updates immediately
+        st.experimental_rerun()
     else:
         st.warning("Please enter a valid task name.")
 
@@ -42,11 +42,14 @@ for idx, task in enumerate(st.session_state.tasks):
         else:
             st.markdown(f"- {task['name']}")
 
+    # Single-click completion
     with col2:
         if not task["completed"]:
             if st.button(f"Mark Done {idx}", key=f"done_{idx}"):
                 task["completed"] = True
                 st.success(f"'{task['name']}' marked as completed!")
+                # Force rerun so we see the updated cross-out immediately
+                st.experimental_rerun()
         else:
             st.write("✅ Done")
 
@@ -56,20 +59,23 @@ st.write("---")
 # 3) CALCULATE TOTAL COMPLETED TASKS
 #####################################
 total_blocks = sum(1 for t in st.session_state.tasks if t["completed"])
-
 st.write(f"**Total Completed Tasks (Blocks):** {total_blocks}")
 
-# Optionally, a button to reset tasks
+#####################################
+# 4) RESET ALL TASKS (ONE CLICK)
+#####################################
 if st.button("Reset All Tasks"):
     for t in st.session_state.tasks:
         t["completed"] = False
     st.warning("All tasks have been reset to incomplete.")
+    st.experimental_rerun()
 
 st.write("---")
 
 ###############################################
-# 4) SPACE-THEMED THREE.JS TOWER VISUALIZATION
+# 5) SPACE-THEMED THREE.JS TOWER VISUALIZATION
 ###############################################
+# Make sure to double the braces for JavaScript object literals in the f-string
 three_js_code = f"""
 <!DOCTYPE html>
 <html lang="en">
