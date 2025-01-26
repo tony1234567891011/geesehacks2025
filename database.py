@@ -1,6 +1,5 @@
-import psycopg2
 import streamlit as st
-
+import psycopg2
 # PostgreSQL Database Connection
 DATABASE_URL = "postgresql://postgres.lxkfxndaabhtrpvazszt:BlockedIn4Ever!@aws-0-ca-central-1.pooler.supabase.com:6543/postgres"
 
@@ -45,3 +44,18 @@ def add_friend(user_id, friend_id):
     finally:
         cur.close()
         conn.close()
+        return None
+    
+def check_user(username, password):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+    query = "SELECT id, password_hash FROM users WHERE username = %s"
+    cursor.execute(query, (username,))
+    user = cursor.fetchone()
+    conn.close()
+
+    if user and user[1] == password :  # Тут краще використовувати хешування
+        return user[0]  # Повертаємо user_id
+    else:
+        raise ValueError("Incorrect Password")
+    return None
