@@ -87,13 +87,7 @@ three_js_code = f"""
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
 
-        let scene = new THREE.Scene();
-        let camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-        let renderer = new THREE.WebGLRenderer({{ alpha: false }});
-        renderer.setClearColor(0x000000, 0);
-        renderer.setSize(window.innerWidth, window.innerHeight);
-        document.body.appendChild(renderer.domElement);
-
+        let scene, camera, renderer, blocks = [];
         let blockWidth = 1;
         let blockHeight = 0.5;
         let towerHeight = {len(tower_colors)}; // Dynamically injected Python variable
