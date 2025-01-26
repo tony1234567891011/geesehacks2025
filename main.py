@@ -161,7 +161,7 @@ if page in st.session_state.habits:
 # Calculate total blocks from all habits, including 'Daily Tasks' if present
 total_blocks = sum(st.session_state.habits.values())
 
-three_js_code = f"""
+three_js_code = """
 <!DOCTYPE html>
 <html lang="en">
 <head>
