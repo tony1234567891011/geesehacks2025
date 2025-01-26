@@ -1,4 +1,6 @@
 import streamlit as st
+from datetime import datetime, timedelta
+import time
 from database import get_tower, add_block, remove_blocks, set_tower  # Import database functions
 
 # Get the user ID (for simplicity, assume user ID is hardcoded or retrieved after login)
@@ -30,6 +32,16 @@ if "camera_position" not in st.session_state:
 # Initialize flag for adding a new block
 if "new_block_added" not in st.session_state:
     st.session_state.new_block_added = False
+
+# Initialize task completion times
+if "task_completion_times" not in st.session_state:
+    st.session_state.task_completion_times = {"task1": None, "task2": None, "task3": None}
+
+# Calculate time left until next day
+now = datetime.now()
+next_day = (now + timedelta(days=1)).replace(hour=0, minute=0, second=0, microsecond=0)
+time_left = next_day - now
+
 
 # Add CSS for a black to night blue gradient background and overlay card
 st.markdown(
@@ -67,9 +79,43 @@ st.markdown(
 )
 
 # Create the overlay card with Streamlit buttons
-with st.container():
-    st.markdown('<div class="overlay-card">', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+# st.markdown('<div class="overlay-card">', unsafe_allow_html=True)
+st.markdown(f"<h3>Time left until next day: {str(time_left).split('.')[0]}</h3>", unsafe_allow_html=True)
+
+# Task buttons
+task1_container = st.empty()
+task2_container = st.empty()
+task3_container = st.empty()
+
+if st.session_state.task_completion_times["task1"] is None or datetime.now() - st.session_state.task_completion_times["task1"] > timedelta(days=1):
+    if task1_container.button("Complete Task 1"):
+        add_block(USER_ID, "P")
+        st.session_state.task_completion_times["task1"] = datetime.now()
+        st.success("Task 1 completed! Added a Red block to the tower.")
+        st.session_state.new_block_added = True
+        task1_container.empty()  # Hide the button after it's clicked
+else:
+    task1_container.empty()  # Hide the button if the task is already completed
+
+if st.session_state.task_completion_times["task2"] is None or datetime.now() - st.session_state.task_completion_times["task2"] > timedelta(days=1):
+    if task2_container.button("Complete Task 2"):
+        add_block(USER_ID, "B")
+        st.session_state.task_completion_times["task2"] = datetime.now()
+        st.success("Task 2 completed! Added a Blue block to the tower.")
+        st.session_state.new_block_added = True
+        task2_container.empty()  # Hide the button after it's clicked
+else:
+    task2_container.empty()  # Hide the button if the task is already completed
+
+if st.session_state.task_completion_times["task3"] is None or datetime.now() - st.session_state.task_completion_times["task3"] > timedelta(days=1):
+    if task3_container.button("Complete Task 3"):
+        add_block(USER_ID, "Y")
+        st.session_state.task_completion_times["task3"] = datetime.now()
+        st.success("Task 3 completed! Added a Yellow block to the tower.")
+        st.session_state.new_block_added = True
+        task3_container.empty()  # Hide the button after it's clicked
+else:
+    task3_container.empty()  # Hide the button if the task is already completed
 
 # Three.js HTML and JavaScript code for rendering the tower
 three_js_code = f"""
@@ -122,12 +168,43 @@ three_js_code = f"""
                 blocks.push(block);
             }}
 
-            animate();
-        }}
+            // Add raycaster and mouse for hover effect
+            let raycaster = new THREE.Raycaster();
+            let mouse = new THREE.Vector2();
+            let INTERSECTED;
 
-        function animate() {{
-            requestAnimationFrame(animate);
-            renderer.render(scene, camera);
+            function onMouseMove(event) {{
+                mouse.x = (event.clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(event.clientY / window.innerHeight) * 2 + 1;
+            }}
+
+            window.addEventListener('mousemove', onMouseMove, false);
+
+            function animate() {{
+                requestAnimationFrame(animate);
+
+                // Update the raycaster with the camera and mouse position
+                raycaster.setFromCamera(mouse, camera);
+
+                // Calculate objects intersecting the raycaster
+                let intersects = raycaster.intersectObjects(blocks);
+
+                if (intersects.length > 0) {{
+                    if (INTERSECTED != intersects[0].object) {{
+                        if (INTERSECTED) INTERSECTED.material.color.setHex(INTERSECTED.currentHex);
+                        INTERSECTED = intersects[0].object;
+                        INTERSECTED.currentHex = INTERSECTED.material.color.getHex();
+                        INTERSECTED.material.color.setHex(0xff0000); // Change hover color here
+                    }}
+                }} else {{
+                    if (INTERSECTED) INTERSECTED.material.color.setHex(INTERSECTED.currentHex);
+                    INTERSECTED = null;
+                }}
+
+                renderer.render(scene, camera);
+            }}
+
+            animate();
         }}
 
         function addBlockAnimation(color) {{
