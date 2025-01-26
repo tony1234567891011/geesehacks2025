@@ -19,6 +19,11 @@ def create_block_tower(height):
     for i in range(height):
         x0, x1 = -block_width / 2, block_width / 2
         y0, y1 = i * block_height, (i + 1) * block_height
+        colour=''
+        if i%2==0:
+            colour="orange"
+        else:
+            colour="green"
         fig.add_shape(
             type="rect",
             x0=x0,
@@ -26,6 +31,8 @@ def create_block_tower(height):
             y0=y0,
             y1=y1,
             line=dict(color="black"),
+
+            fillcolor=colour,
             fillcolor=gradient_colors[i],  # Use the gradient color
         )
 
@@ -36,6 +43,7 @@ def create_block_tower(height):
             text=str(i + 1),  # Block number
             showarrow=False,
             font=dict(size=12, color="black"),  # Customize font size and color
+        main
         )
 
     # Dynamically set the y-axis range to show all blocks
