@@ -4,12 +4,17 @@ import streamlit as st
 if "tower_height" not in st.session_state:
     st.session_state.tower_height = 5  # Default initial height
 
+# Initialize session state for camera position
+if "camera_position" not in st.session_state:
+    st.session_state.camera_position = {"x": 3, "y": st.session_state.tower_height * 0.5, "z": 5}
+
+# Function to update camera position in session state
+def update_camera_position(x, y, z):
+    st.session_state.camera_position = {"x": x, "y": y, "z": z}
+
 # Streamlit UI
 st.title("Progress Tracker")
 st.write("Make your tower as big as possible!")
-
-# Display the current tower height
-st.write(f"Current Tower Height: {st.session_state.tower_height}")
 
 # Add Block Button
 if st.button("Add Block"):
@@ -21,6 +26,9 @@ if st.button("Add Block"):
 # Reset Button
 if st.button("Reset Tower"):
     st.session_state.tower_height = 1  # Reset to one block
+
+# Display the current tower height
+st.write(f"Current Tower Height: {st.session_state.tower_height}")
 
 # Add CSS for a black to night blue gradient background
 st.markdown(
@@ -83,8 +91,16 @@ three_js_code = f"""
             blocks.push(block);
         }}
 
-        camera.position.set(3, towerHeight * blockHeight, 5); // Adjust camera position for an angled, upper view
+        // Restore camera position from session state
+        camera.position.set({st.session_state.camera_position["x"]}, {st.session_state.camera_position["y"]}, {st.session_state.camera_position["z"]});
         camera.lookAt(0, towerHeight * blockHeight / 2, 0); // Make the camera look at the center of the tower
+
+        // Add event listener for mouse wheel to scroll in the z-axis
+        window.addEventListener('wheel', (event) => {{
+            camera.position.y += event.deltaY * 0.01; // Adjust the scroll speed as needed
+            // Save camera position to session state
+            fetch(`/?x=${{camera.position.x}}&y=${{camera.position.y}}&z=${{camera.position.z}}`);
+        }});
 
         function animate() {{
             requestAnimationFrame(animate);
