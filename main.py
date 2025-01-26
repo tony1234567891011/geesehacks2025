@@ -1,70 +1,75 @@
 import streamlit as st
 import datetime
 
-################################
-# STEP 1: SESSION STATE SETUP
-################################
+# Set up the page
+st.set_page_config(
+    page_title="Space Themed To-Do List",
+    layout="centered",
+    initial_sidebar_state="expanded"
+)
+
+st.title("🚀 Build Your Space Tower!")
+st.write("Create tasks below. Mark them complete to add blocks to your 3D tower in space.")
+
+##############################################
+# SESSION STATE: STORE AND MANAGE TO-DO TASKS
+##############################################
 if "tasks" not in st.session_state:
-    # We'll start with a couple sample tasks
-    # Each task has a structure: {task_name: bool_completed}
-    st.session_state.tasks = {
-        "Read for 30 minutes": False,
-        "Practice guitar": False,
-        "Go for a run": False
-    }
+    st.session_state.tasks = []  # List of dicts: [ {"name": str, "completed": bool }, ...]
 
-################################
-# STEP 2: STREAMLIT LAYOUT
-################################
-st.set_page_config(page_title="Space Tower", layout="centered")
-st.title("🚀 Build a Tower in Space!")
-st.write("Add or select tasks below. Mark them as completed to build up your tower!")
+# 1) INPUT TO ADD A NEW TASK
+new_task = st.text_input("Add a new task:")
 
-################################
-# STEP 3: ADD/SELECT TASK
-################################
-all_tasks = list(st.session_state.tasks.keys()) + ["(Add a new task...)"]
-selected_task = st.selectbox("Select a Task to Work On", all_tasks)
-
-if selected_task == "(Add a new task...)":
-    new_task_name = st.text_input("Enter the new task name:")
-    if st.button("Add new task"):
-        if new_task_name.strip():
-            st.session_state.tasks[new_task_name] = False
-            st.success(f"Added task: {new_task_name}")
-        else:
-            st.warning("Please enter a valid task name.")
-else:
-    st.write(f"**Selected Task**: {selected_task}")
-    # If it’s already completed, we’ll let user know
-    if st.session_state.tasks[selected_task]:
-        st.markdown(f"- ~~{selected_task}~~ (already completed)")
+if st.button("Add Task"):
+    new_task = new_task.strip()
+    if new_task:
+        # Append a new task dict
+        st.session_state.tasks.append({"name": new_task, "completed": False})
+        st.success(f"Task '{new_task}' added!")
     else:
-        st.markdown(f"- {selected_task} (not yet completed)")
+        st.warning("Please enter a valid task name.")
 
-    if not st.session_state.tasks[selected_task]:
-        if st.button("Mark Completed"):
-            st.session_state.tasks[selected_task] = True
-            st.success(f"'{selected_task}' marked as completed!")
+st.write("---")
 
-################################
-# STEP 4: RESET ALL TASKS (Optional)
-################################
+##########################################
+# 2) DISPLAY TASKS AND MARK COMPLETION
+##########################################
+for idx, task in enumerate(st.session_state.tasks):
+    col1, col2 = st.columns([0.8, 0.2])
+    with col1:
+        if task["completed"]:
+            st.markdown(f"- ~~{task['name']}~~")
+        else:
+            st.markdown(f"- {task['name']}")
+
+    with col2:
+        if not task["completed"]:
+            if st.button(f"Mark Done {idx}", key=f"done_{idx}"):
+                task["completed"] = True
+                st.success(f"'{task['name']}' marked as completed!")
+        else:
+            st.write("✅ Done")
+
+st.write("---")
+
+#####################################
+# 3) CALCULATE TOTAL COMPLETED TASKS
+#####################################
+total_blocks = sum(1 for t in st.session_state.tasks if t["completed"])
+
+st.write(f"**Total Completed Tasks (Blocks):** {total_blocks}")
+
+# Optionally, a button to reset tasks
 if st.button("Reset All Tasks"):
-    for task_name in st.session_state.tasks:
-        st.session_state.tasks[task_name] = False
+    for t in st.session_state.tasks:
+        t["completed"] = False
     st.warning("All tasks have been reset to incomplete.")
 
-################################
-# STEP 5: COUNT COMPLETED TASKS
-################################
-# Let's say each completed task = 1 block in the tower
-total_blocks = sum(1 for completed in st.session_state.tasks.values() if completed)
+st.write("---")
 
-################################
-# STEP 6: 3D TOWER IN SPACE
-################################
-# We need to carefully use an f-string and double braces for JS objects.
+###############################################
+# 4) SPACE-THEMED THREE.JS TOWER VISUALIZATION
+###############################################
 three_js_code = f"""
 <!DOCTYPE html>
 <html lang="en">
@@ -108,7 +113,7 @@ three_js_code = f"""
         // Starfield
         const starGeometry = new THREE.SphereGeometry(0.1, 24, 24);
         const starMaterial = new THREE.MeshBasicMaterial({{ color: 0xffffff }});
-        for (let i = 0; i < 200; i++) {{
+        for (let i = 0; i < 300; i++) {{
             const star = new THREE.Mesh(starGeometry, starMaterial);
             star.position.set(
                 (Math.random() - 0.5) * 200,
@@ -128,11 +133,11 @@ three_js_code = f"""
         // Tower blocks
         const blockWidth = 1;
         const blockHeight = 0.5;
-        const towerHeight = {total_blocks}; // injected from Python
+        const towerHeight = {total_blocks}; // from Python
 
         for (let i = 0; i < towerHeight; i++) {{
             const geometry = new THREE.BoxGeometry(blockWidth, blockHeight, blockWidth);
-            const hue = (i / Math.max(1, towerHeight)) * 360;
+            const hue = (i / Math.max(1, towerHeight)) * 360; 
             const color = new THREE.Color(`hsl(${{hue}}, 100%, 50%)`);
             const material = new THREE.MeshPhongMaterial({{ color: color, shininess: 50 }});
             const block = new THREE.Mesh(geometry, material);
@@ -157,5 +162,4 @@ three_js_code = f"""
 </html>
 """
 
-# Finally, render the HTML/JS in Streamlit
 st.components.v1.html(three_js_code, height=600, scrolling=False)
