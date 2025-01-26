@@ -1,13 +1,6 @@
 import streamlit as st
 
-def safe_rerun():
-    """Call safe_rerun() if available."""
-    if hasattr(st, "experimental_rerun"):
-        safe_rerun()
-    else:
-        st.warning("Your Streamlit version does not support experimental_rerun. Please upgrade.")
-
-
+# --- Streamlit Configuration ---
 st.set_page_config(
     page_title="Space Themed To-Do List",
     layout="centered",
@@ -15,25 +8,22 @@ st.set_page_config(
 )
 
 st.title("🚀 Build Your Space Tower!")
-st.write("Create tasks below. Mark them complete to add blocks to your 3D tower in space.")
+st.write("Add your own tasks below. Mark them complete with one click to add a block to the tower!")
 
 ##############################################
-# SESSION STATE: STORE AND MANAGE TO-DO TASKS
+# 1) SESSION STATE: STORE AND MANAGE TO-DO TASKS
 ##############################################
 if "tasks" not in st.session_state:
-    st.session_state.tasks = []  # Each task is a dict: {"name": str, "completed": bool}
+    # Each task is a dict: {"name": str, "completed": bool}
+    st.session_state.tasks = []
 
-#####################################
-# 1) ADD A NEW TASK (ONE CLICK)
-#####################################
+# Add input for a new task
 new_task = st.text_input("Add a new task:")
 if st.button("Add Task"):
-    new_task = new_task.strip()
-    if new_task:
-        st.session_state.tasks.append({"name": new_task, "completed": False})
-        st.success(f"Task '{new_task}' added!")
-        # Rerun so UI updates immediately
-        safe_rerun()
+    task_name = new_task.strip()
+    if task_name:
+        st.session_state.tasks.append({"name": task_name, "completed": False})
+        st.success(f"Task '{task_name}' added!")
     else:
         st.warning("Please enter a valid task name.")
 
@@ -42,24 +32,17 @@ st.write("---")
 ##########################################
 # 2) DISPLAY TASKS AND MARK COMPLETION
 ##########################################
-for idx, task in enumerate(st.session_state.tasks):
-    col1, col2 = st.columns([0.8, 0.2])
-    with col1:
-        if task["completed"]:
-            st.markdown(f"- ~~{task['name']}~~")
-        else:
-            st.markdown(f"- {task['name']}")
+for i, task in enumerate(st.session_state.tasks):
+    # Show the task's name and status
+    if task["completed"]:
+        st.write(f"**{task['name']}** (Completed)")
+    else:
+        st.write(f"**{task['name']}** (Incomplete)")
 
-    # Single-click completion
-    with col2:
-        if not task["completed"]:
-            if st.button(f"Mark Done {idx}", key=f"done_{idx}"):
-                task["completed"] = True
-                st.success(f"'{task['name']}' marked as completed!")
-                # Force rerun so we see the updated cross-out immediately
-                safe_rerun()
-        else:
-            st.write("✅ Done")
+        # Single-click completion
+        if st.button("Complete", key=f"complete_{i}"):
+            task["completed"] = True
+            st.success(f"'{task['name']}' completed!")
 
 st.write("---")
 
@@ -76,14 +59,15 @@ if st.button("Reset All Tasks"):
     for t in st.session_state.tasks:
         t["completed"] = False
     st.warning("All tasks have been reset to incomplete.")
-    safe_rerun()
 
 st.write("---")
 
 ###############################################
 # 5) SPACE-THEMED THREE.JS TOWER VISUALIZATION
 ###############################################
-# Make sure to double the braces for JavaScript object literals in the f-string
+# No cross-out needed. We'll keep the same starfield & planet design.
+# We do need to double braces {{ }} for JS object literals, since we are using an f-string.
+
 three_js_code = f"""
 <!DOCTYPE html>
 <html lang="en">
@@ -109,17 +93,17 @@ three_js_code = f"""
 <body>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script>
+        // Scene setup
         const scene = new THREE.Scene();
         const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
         const renderer = new THREE.WebGLRenderer();
         renderer.setSize(window.innerWidth, window.innerHeight);
         document.body.appendChild(renderer.domElement);
 
-        // Ambient light
+        // Lighting
         const ambientLight = new THREE.AmbientLight(0xffffff, 0.3);
         scene.add(ambientLight);
 
-        // Point light
         const pointLight = new THREE.PointLight(0xffffff, 1, 100);
         pointLight.position.set(10, 20, 20);
         scene.add(pointLight);
@@ -177,3 +161,4 @@ three_js_code = f"""
 """
 
 st.components.v1.html(three_js_code, height=600, scrolling=False)
+
