@@ -43,7 +43,6 @@ def create_block_tower(height):
             text=str(i + 1),  # Block number
             showarrow=False,
             font=dict(size=12, color="black"),  # Customize font size and color
-        main
         )
 
     # Dynamically set the y-axis range to show all blocks
