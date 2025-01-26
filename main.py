@@ -36,9 +36,9 @@ st.markdown(
     <style>
     html, body, [data-testid="stAppViewContainer"] {
         background: linear-gradient(to bottom, #000000, #001f3f); /* Black to Night Blue */
-        height: auto; /* Allow height to grow dynamically */
+        height: 100vh; /* Set height to 100% of the viewport height */
         margin: 0;
-        overflow-x: hidden;
+        overflow: hidden;
     }
 
     .scrollable-container {
@@ -83,7 +83,7 @@ three_js_code = f"""
         for (let i = 0; i < towerHeight; i++) {{
             let geometry = new THREE.BoxGeometry(blockWidth, blockHeight, blockWidth);
             let hue = (i / towerHeight) * 360; // Define hue within the loop
-            let color = new THREE.Color(`hsl(${{hue}}, 80%, 85%)`); // Adjust saturation and lightness for pastel colors
+            let color = new THREE.Color(`hsl(${{hue}}, 90%, 70%)`); // Adjust saturation and lightness for higher contrast
             let material = new THREE.MeshLambertMaterial({{ color: color }}); // Use Lambert material for better lighting
             let block = new THREE.Mesh(geometry, material);
             block.position.y = i * blockHeight;
@@ -133,7 +133,7 @@ three_js_code = f"""
 """
 
 # Embed the Three.js code in Streamlit
-st.components.v1.html(three_js_code, height=600, scrolling=False)
+st.components.v1.html(three_js_code, height=800, scrolling=False)  # Set height to 800 to span the whole page
 
 # Sidebar navigation
 st.sidebar.title("Navigation")
