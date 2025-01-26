@@ -26,6 +26,15 @@ def add_task(task, category):
 def complete_task(task_index):
     tasks[task_index]['completed'] = True
     save_tasks(tasks)
+    # Add a block with the corresponding color
+    category = tasks[task_index]['category']
+    if category == 'Athletic':
+        st.session_state.block_colors.append('red')
+    elif category == 'Social':
+        st.session_state.block_colors.append('yellow')
+    elif category == 'Mental':
+        st.session_state.block_colors.append('blue')
+    st.session_state.tower_height += 1
 
 # Map category to color
 category_colors = {

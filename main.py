@@ -1,8 +1,10 @@
 import streamlit as st
 
-# Initialize session state for tower height
+# Initialize session state for tower height and block colors
 if "tower_height" not in st.session_state:
     st.session_state.tower_height = 5  # Default initial height
+if "block_colors" not in st.session_state:
+    st.session_state.block_colors = ["hsl(0, 90%, 70%)"] * st.session_state.tower_height  # Default colors
 
 # Initialize session state for camera position
 if "camera_position" not in st.session_state:
@@ -16,19 +18,39 @@ def update_camera_position(x, y, z):
 st.title("Progress Tracker")
 st.write("Make your tower as big as possible!")
 
+# Color picker for new block
+new_block_color = st.color_picker("Pick a color for the new block", "#ff0000")
+
 # Add Block Button
 if st.button("Add Block"):
     if st.session_state.tower_height < 200:  # Limit the number of blocks to 200
         st.session_state.tower_height += 1
+        st.session_state.block_colors.append(new_block_color)
     else:
         st.warning("Maximum tower height reached!")
 
 # Reset Button
 if st.button("Reset Tower"):
     st.session_state.tower_height = 1  # Reset to one block
+    st.session_state.block_colors = [new_block_color]
 
 # Display the current tower height
 st.write(f"Current Tower Height: {st.session_state.tower_height}")
+st.write(f"Current Block Colors: {st.session_state.block_colors}")
+
+# Button to print block colors array to console
+if st.button("Print Block Colors"):
+    st.markdown(
+        f"""
+        <script>
+        function printBlockColors() {{
+            console.log({st.session_state.block_colors});
+        }}
+        printBlockColors();
+        </script>
+        """,
+        unsafe_allow_html=True,
+    )
 
 # Add CSS for a black to night blue gradient background
 st.markdown(
@@ -78,12 +100,12 @@ three_js_code = f"""
         let blockHeight = 0.5;
         let blocks = [];
         let towerHeight = {st.session_state.tower_height}; // Dynamically injected Python variable
+        let blockColors = {st.session_state.block_colors}; // Dynamically injected Python variable
 
         // Create blocks
         for (let i = 0; i < towerHeight; i++) {{
             let geometry = new THREE.BoxGeometry(blockWidth, blockHeight, blockWidth);
-            let hue = (i / towerHeight) * 360; // Define hue within the loop
-            let color = new THREE.Color(`hsl(${{hue}}, 90%, 70%)`); // Adjust saturation and lightness for higher contrast
+            let color = new THREE.Color(blockColors[i]); // Use the color from the session state
             let material = new THREE.MeshLambertMaterial({{ color: color }}); // Use Lambert material for better lighting
             let block = new THREE.Mesh(geometry, material);
             block.position.y = i * blockHeight;
