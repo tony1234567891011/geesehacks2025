@@ -56,8 +56,6 @@ def check_user(username, password):
 
     if user and user[1] == password :  # Тут краще використовувати хешування
         return user[0]  # Повертаємо user_id
-    else:
-        raise ValueError("Incorrect Password")
     return None
 
 

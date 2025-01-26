@@ -9,7 +9,7 @@ st.title("Login")
 # User input for login
 with st.form(key="login_form"):
     username = st.text_input("Username")
-    password = st.text_input("Password", type="password")
+    password = st.text_input("Password")
 
     # Form submission
     submit_button = st.form_submit_button(label="Login")
@@ -21,6 +21,14 @@ if submit_button:
     if user_id:
         st.success(f"Seccess your user_id: {user_id}")
         st.write(f"(http://localhost:8501/ProfilePage?user_id={user_id})")
+        target_url = "http://localhost:8501/ProfilePage?user_id={12}"
+        st.markdown(
+            f"""
+            <script>
+            window.location.href = "{target_url}";
+            </script>
+            """, unsafe_allow_html=True
+        )
+
     else:
         st.error("fail")
-
