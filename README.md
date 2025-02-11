@@ -1,4 +1,4 @@
-# Project Story: Blocked In
+# Blocked In
 ### Inspiration
 We realized that accountability and consistent progress are key to staying focused. Whether it’s being motivated by friends or noticing daily improvements, these small wins can make a big difference. This insight inspired us to create Blocked In, a platform designed to help people build focus and consistency in a fun and interactive way.
 
